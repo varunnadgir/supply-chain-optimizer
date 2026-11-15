@@ -1,0 +1,10 @@
+# Raw data and the database are large and are rebuilt locally (see data/README.md)
+data/raw/*.csv
+data/*.db
+
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.venv/
+venv/
