@@ -8,7 +8,7 @@ without copying cells around:
   - src/build_scenarios.py (data for the interactive page)
   - tests/ (automated checks)
 
-tests/test_reproduces_notebooks.py checks that this module gives exactly the
+tests/test_models.py checks that this module gives exactly the
 numbers notebook 2 saved to results/.
 """
 
@@ -295,9 +295,18 @@ def _solve_job(job: dict) -> dict:
 
 def solve_many(jobs: list[dict], processes=None) -> list[dict]:
     """Run best_network for each job (a dict of its keyword arguments, plus an
-    optional "weights" array for set_weights). Returns results in job order."""
-    import os
-    from multiprocessing import get_context
+    optional "weights" array for set_weights). Returns results in job order.
 
-    with get_context("fork").Pool(processes or os.cpu_count(), initializer=_init_worker) as pool:
-        return pool.map(_solve_job, [dict(j) for j in jobs])
+    On Linux and macOS the jobs are spread over the CPU cores. Windows cannot
+    copy a running Python process the same way, so there the jobs run one after
+    another: same results, a few times slower.
+    """
+    import multiprocessing
+    import os
+
+    jobs = [dict(j) for j in jobs]
+    if "fork" not in multiprocessing.get_all_start_methods() or processes == 1:
+        _init_worker()
+        return [_solve_job(job) for job in jobs]
+    with multiprocessing.get_context("fork").Pool(processes or os.cpu_count(), initializer=_init_worker) as pool:
+        return pool.map(_solve_job, jobs)
