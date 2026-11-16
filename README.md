@@ -2,13 +2,15 @@
 
 **Where should an online marketplace put its fulfillment centers, and how much stock should each one hold?**
 
-This project answers that question for Olist, a Brazilian e-commerce marketplace, using about 100,000 real orders. It combines SQL analysis, a freight cost model, a mixed-integer optimization model and an inventory policy tested by simulation.
+This project answers that question for Olist, a Brazilian e-commerce marketplace, using about 100,000 real orders. It combines SQL analysis, a freight cost model, a mixed-integer optimization model, an inventory policy tested by simulation, and robustness checks on the result.
 
-**Tools:** Python (pandas, NumPy, PuLP, SciPy, matplotlib), SQL (SQLite), Jupyter.
+**[Try the interactive version](https://varunnadgir.github.io/supply-chain-optimizer/)**: pick the number of centers and the handling cost, and see the optimized network, its savings and delivery times.
+
+**Tools:** Python (pandas, NumPy, PuLP, SciPy, matplotlib, pytest), SQL (SQLite), Jupyter, JavaScript (interactive page).
 
 ## The result in one paragraph
 
-Today every Olist order ships as a single parcel straight from the seller. 72% of items ship out of São Paulo state, but only 43% are delivered there, so most parcels travel far. The optimization model recommends **six regional fulfillment centers**, which in the base case **cut yearly freight by about 12% and typical transit time by 41%, from 7.3 days to 4.3**. Holding the stock those centers need costs roughly a quarter of the freight saving. The model also shows that one in four items should keep shipping direct, because an extra handling step costs more than it saves for customers who are already close to the sellers.
+Today every Olist order ships as a single parcel straight from the seller. 72% of items ship out of São Paulo state, but only 43% are delivered there, so most parcels travel far. The optimization model recommends **six regional fulfillment centers**, which in the base case **cut yearly freight by about 12% and typical transit time by 41%, from 7.3 days to 4.3**. Holding the stock those centers need costs roughly a quarter of the freight saving. The model also shows that one in four items should keep shipping direct, because an extra handling step costs more than it saves for customers who are already close to the sellers. The site choice holds up under resampled demand and when the model is designed on one half-year and used on the next.
 
 ![Map of the six-center network](figures/02_network_map.png)
 
@@ -26,7 +28,7 @@ Today every Olist order ships as a single parcel straight from the seller. 72% o
 
 ## The approach
 
-The project is three notebooks, meant to be read in order.
+The project is four notebooks, meant to be read in order.
 
 ### 1. [SQL exploration](notebooks/01_sql_exploration.ipynb)
 
@@ -52,6 +54,15 @@ The six sites the model picks are Osasco (São Paulo metro), Nova Iguaçu (Rio d
 - **Cost of inventory.** Holding the stock costs about R\$51,000 a year, roughly 26% of the freight saving.
 
 ![Safety stock: six centers vs one pooled location](figures/03_risk_pooling.png)
+
+### 4. [Trade-offs and robustness](notebooks/04_tradeoffs_and_robustness.ipynb)
+
+- **Freight and inventory together.** Net of holding costs, the first two centers each add over R\$40,000 a year. Centers 3 to 7 add about R\$13,000 to R\$18,000 each, which is the most each could cost to run and still pay off.
+- **Bootstrap test.** Across 40 resampled years, five of the six sites were chosen every time, and the sixth was always in the same metro area.
+- **Out-of-sample test.** A network designed on Sep 2017 to Feb 2018 was exactly the best network for Mar to Aug 2018 (zero regret for 2, 4 and 6 centers).
+- **Cost versus speed.** Putting a R\$ value on transit days barely changes the sites. The cheapest and the fastest networks are nearly the same.
+
+![Freight saved vs inventory holding cost](figures/04_freight_vs_inventory.png)
 
 ## Key numbers
 
@@ -90,18 +101,23 @@ Download the data (see [`data/README.md`](data/README.md)), then:
 
 ```bash
 python src/build_database.py      # builds data/olist.db, about 30 seconds
-jupyter notebook                  # open the notebooks in order: 01, 02, 03
+jupyter notebook                  # open the notebooks in order: 01 to 04
+pytest -q                         # 8 automated checks, about a minute
 ```
 
-Notebook 2 takes about three minutes to run because it solves the optimization model about 20 times.
+Notebooks 2 and 4 take about three minutes each because they solve the optimization model many times.
+
+To rebuild the interactive page's data after changing the model: `python src/build_scenarios.py` (56 solves, a few minutes). Preview the page with `python -m http.server` inside `docs/`.
 
 ## Repository layout
 
 ```
 data/           raw CSVs and the SQLite database (not committed), plus data notes
 sql/            every SQL query used in the project, by name
-src/            build_database.py and small shared helpers
-notebooks/      the three notebooks, with outputs
+src/            database build, the network and inventory models, scenario builder
+notebooks/      the four notebooks, with outputs
+docs/           the interactive page (GitHub Pages) and its precomputed data
+tests/          automated checks that the models reproduce the notebooks
 figures/        charts saved by the notebooks
 results/        tables saved by the notebooks (rate card, site choices, inventory policy)
 ```
