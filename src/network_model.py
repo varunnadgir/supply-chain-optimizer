@@ -267,3 +267,37 @@ def best_network(data: NetworkData, n_open: int, handling_fee=HANDLING_FEE, line
     result["site_names"] = [data.candidates.at[j, "city_key"] for j in sorted(sites)]
     result["assigned_site"] = assigned
     return result
+
+
+# ---------------------------------------------------------------- many solves in parallel
+# Notebook 4 solves the model dozens of times. These helpers spread the solves
+# over all CPU cores. Each worker process builds its own copy of the data once.
+
+_WORKER_DATA = None
+
+
+def _init_worker():
+    global _WORKER_DATA
+    _WORKER_DATA = prepare()
+
+
+def _solve_job(job: dict) -> dict:
+    data = _WORKER_DATA
+    weights = job.pop("weights", None)
+    if weights is not None:
+        data.set_weights(weights)
+    result = best_network(data, **job)
+    if weights is not None:
+        data.set_weights()          # back to the real data for the next job
+    result.pop("assigned_site")
+    return result
+
+
+def solve_many(jobs: list[dict], processes=None) -> list[dict]:
+    """Run best_network for each job (a dict of its keyword arguments, plus an
+    optional "weights" array for set_weights). Returns results in job order."""
+    import os
+    from multiprocessing import get_context
+
+    with get_context("fork").Pool(processes or os.cpu_count(), initializer=_init_worker) as pool:
+        return pool.map(_solve_job, [dict(j) for j in jobs])

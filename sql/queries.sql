@@ -226,7 +226,8 @@ SELECT
     sg.lat                                  AS seller_lat,
     sg.lng                                  AS seller_lng,
     julianday(o.order_delivered_customer_date)
-      - julianday(o.order_delivered_carrier_date) AS transit_days
+      - julianday(o.order_delivered_carrier_date) AS transit_days,
+    o.order_purchase_timestamp              AS purchased_at
 FROM order_items oi
 JOIN orders    o  ON o.order_id    = oi.order_id
 JOIN customers c  ON c.customer_id = o.customer_id
