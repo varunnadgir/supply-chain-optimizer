@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fulfillment Network Memo</title>
+<meta name="description" content="Two-page recommendation: where Olist should build fulfillment centers, how big, and how to run them.">
+<style>
+  :root { color-scheme: light; --text: #0b0b0b; --text-2: #52514e; --muted: #8a8984; --border: #e6e5e0; --blue: #2a78d6; --bg: #f6f5f2; --paper: #fff; --soft: #f3f2ee; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; --text: #f0efec; --text-2: #c3c2b7; --muted: #8f8e88; --border: #2e2e2c; --blue: #3987e5; --bg: #121211; --paper: #1a1a19; --soft: #222220; }
+  }
+  :root[data-theme="dark"] { color-scheme: dark; --text: #f0efec; --text-2: #c3c2b7; --muted: #8f8e88; --border: #2e2e2c; --blue: #3987e5; --bg: #121211; --paper: #1a1a19; --soft: #222220; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14.5px/1.55 Georgia, "Times New Roman", serif; }
+  .page { max-width: 820px; margin: 24px auto; background: var(--paper); border: 1px solid var(--border); border-radius: 6px; padding: 48px 56px; }
+  .head { font: 13px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; color: var(--text-2); border-bottom: 2px solid var(--text); padding-bottom: 12px; margin-bottom: 18px; display: grid; grid-template-columns: 70px 1fr; gap: 0 8px; }
+  .head b { color: var(--text); font-weight: 600; }
+  h1 { font: 700 22px/1.25 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; margin: 0 0 14px; letter-spacing: -0.01em; }
+  h2 { font: 700 14px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); margin: 22px 0 6px; }
+  p { margin: 0 0 10px; }
+  .rec { background: var(--soft); border-left: 3px solid var(--blue); padding: 12px 16px; margin: 0 0 14px; }
+  ul, ol { margin: 4px 0 10px; padding-left: 20px; }
+  li { margin: 3px 0; }
+  table { width: 100%; border-collapse: collapse; font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; font-variant-numeric: tabular-nums; margin: 6px 0 12px; }
+  th, td { padding: 6px 6px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: top; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-2); font-weight: 600; }
+  .foot { font: 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 20px; }
+  a { color: var(--blue); }
+  .tools { max-width: 820px; margin: 16px auto 0; padding: 0 16px; font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; display: flex; gap: 16px; flex-wrap: wrap; }
+  .break { break-before: page; }
+  @media (max-width: 640px) { .page { padding: 28px 18px; margin: 12px 0; border-radius: 0; border-left: 0; border-right: 0; } h1 { font-size: 19px; } }
+  @media print {
+    @page { size: letter; margin: 0.5in 0.6in; }
+    :root { --text: #000; --text-2: #333; --muted: #666; --border: #ccc; --paper: #fff; --bg: #fff; --soft: #f3f3f3; }
+    body { font-size: 10.2pt; line-height: 1.42; background: #fff; }
+    h2 { margin: 12px 0 4px; } table { font-size: 9pt; margin: 4px 0 8px; } th, td { padding: 3px 5px; } .rec { padding: 8px 12px; } h1 { font-size: 17pt; margin-bottom: 10px; } .head { margin-bottom: 12px; }
+    .page { border: 0; margin: 0; padding: 0; max-width: none; }
+    .tools { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="tools"><a href="./">Network Design Studio</a><a href="https://github.com/varunnadgir/supply-chain-optimizer">Code and notebooks</a><a href="memo.pdf">PDF</a></div>
+<article class="page">
+  <div class="head">
+    <b>To</b><span>Olist operations leadership</span>
+    <b>From</b><span>Varun Nadgir</span>
+    <b>Date</b><span>November 2026</span>
+    <b>Re</b><span>Where to build fulfillment centers, how big, and how to run them</span>
+  </div>
+
+  <h1>Build nine regional fulfillment centers in two phases, and stock every category</h1>
+
+  <div class="rec">
+    <p><b>Recommendation.</b> Build nine regional fulfillment centers, with one large building in the São Paulo metro area. Commit now to the six sites that every test selects, and decide the last three after a year of growth data. Stock every product category, not just the best sellers.</p>
+    <p style="margin:0"><b>Expected result</b> at the demand growth the business is likely to see: about <b>R$220,000 a year saved after building costs</b> (about 8% of freight), <b>two-day delivery for about 60% of items instead of 19%</b>, orders at the customer's door in <b>7.5 days instead of 12.7</b> (simulated for the six-center core), and about <b>37% less transport CO2</b>.</p>
+  </div>
+
+  <h2>The problem</h2>
+  <p>Every order ships as a separate parcel straight from its seller. 72% of items ship from São Paulo state but only 43% are delivered there, so most parcels cross the country. Crossing a state line roughly doubles the freight (R$24 against R$13 per item) and the transit time (12 days against under 5), and late orders earn 2.6 review stars against 4.4 for fast ones.</p>
+
+  <h2>What the analysis shows</h2>
+  <ol>
+    <li><b>Regional centers pay off, for most customers but not all.</b> Goods move to a center by full truck and on to the customer as a short parcel trip. About one item in five should still ship direct: customers near their sellers gain nothing from an extra stop.</li>
+    <li><b>The network must be sized for growth.</b> A network designed on last year's demand leaves about R$19,000 a year (8% of the saving) on the table once demand grows, because the São Paulo and Rio de Janeiro buildings fill up.</li>
+    <li><b>A good forecast is enough; a perfect one is not worth paying for.</b> Planning across 50 possible futures gave the same network value as planning for the single average future, and perfect foresight would add only about 3%. Overflow can always ship direct, so a wrong guess is cheap to fix.</li>
+    <li><b>Nine centers is the prudent choice.</b> Ten centers maximize the average saving. Nine give up under 1% of it and do about 7% better in the worst tenth of futures, when growth disappoints.</li>
+    <li><b>Speed is nearly free up to about 60% two-day delivery.</b> Beyond that it gets expensive fast: a 70% promise needs 18 centers and gives up about a quarter of the saving.</li>
+  </ol>
+
+  <h2>Which sites, and when</h2>
+  <table>
+    <thead><tr><th>Phase</th><th>Sites</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>1. Build now</td><td>Salvador, Porto Alegre, Rio de Janeiro metro (Nova Iguaçu), Belo Horizonte metro (Contagem)</td><td>Chosen under every cost, growth and data test</td></tr>
+      <tr><td>1. Build now</td><td>São Paulo metro (large building), Brasília</td><td>Chosen in every test except doubled building costs</td></tr>
+      <tr><td>2. Decide in a year</td><td>Curitiba, Recife, Teresina</td><td>Worth it at expected growth; the first to drop if growth is slow or buildings cost more</td></tr>
+    </tbody>
+  </table>
+
+  <h2>How to run it</h2>
+  <ul>
+    <li><b>Stock every category.</b> A day-by-day simulation on the real order stream found that stocking only the ten best-selling categories sends just 44% of items through a center and cuts the freight saving from 11.8% to about 7%. Stocking everything restores it. The extra inventory costs about as much as the extra freight it saves, about R$60,000 a year each, and in return half of all orders arrive within five days instead of 37%.</li>
+    <li><b>Staff up for peaks instead of building for them.</b> Black Friday brought six times a normal day's orders and left a backlog that took about a week to clear. With 60% spare picking capacity, peak orders arrive about half a day later than usual; with 10%, well over a day later. Temporary staff for the peak weeks is cheaper than a bigger building.</li>
+    <li><b>Measure supplier lead times before setting safety stock.</b> If replenishment takes 5 to 20 days instead of the planned week, the share of orders filled from stock falls from 93% to 83%.</li>
+  </ul>
+
+  <h2>What would change this recommendation</h2>
+  <table>
+    <thead><tr><th>Assumption</th><th>Base case</th><th>Effect if wrong</th></tr></thead>
+    <tbody>
+      <tr><td>Yearly cost of a building</td><td>R$15,000 small, R$25,000 large</td><td>Halved: 16 centers. Doubled: 4 centers. The four core sites stay.</td></tr>
+      <tr><td>Handling cost per item at a center</td><td>R$2.00</td><td>R$1 to R$3 moves the freight saving from about 16% to 9%</td></tr>
+      <tr><td>Demand growth</td><td>Median 1.5 times the study year</td><td>Slow growth: 8 centers. Fast growth: 12.</td></tr>
+      <tr><td>Parcel versus truck emissions</td><td>0.25 against 0.10 kg CO2 per tonne-km</td><td>The CO2 cut ranges from under 20% to over 50%</td></tr>
+    </tbody>
+  </table>
+  <p>The first number to pin down is the real cost of a building, because it decides how many to build. Cost and carbon point the same way: no carbon price within any real-world range changes the design.</p>
+
+  <h2>Next steps</h2>
+  <ol>
+    <li>Get quotes for warehouse space and staffing in the six phase-one metro areas, and re-run the model with them.</li>
+    <li>Measure supplier lead times and current handling costs at a pilot site.</li>
+    <li>Open the São Paulo and Rio de Janeiro centers first: together they handle about 60% of center volume.</li>
+  </ol>
+
+  <div class="foot">
+    Method: freight rate card fitted to 84,523 shipments (Sep 2017 to Aug 2018); facility location as a mixed-integer program; two-stage stochastic program over 50 demand futures, judged on 300 others; discrete-event simulation of the real order stream; emission factors per tonne-km. Figures are for the public Olist dataset, a sample of the company's orders, so percentages transfer better than reais. Full analysis: <a href="https://github.com/varunnadgir/supply-chain-optimizer">github.com/varunnadgir/supply-chain-optimizer</a>.
+  </div>
+</article>
+</body>
+</html>

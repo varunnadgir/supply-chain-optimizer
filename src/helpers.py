@@ -53,6 +53,13 @@ def run_query(name: str, con: sqlite3.Connection, show_sql: bool = True, **kwarg
 
 # ---------------------------------------------------------------- geography
 
+def pretty_city(city_key: str) -> str:
+    """'sao caetano do sul, SP' -> 'Sao Caetano do Sul' (the data has no accents)."""
+    small = {"do", "da", "de", "dos", "das", "e"}
+    words = city_key.split(",")[0].split()
+    return " ".join(w if (w in small and k) else w.capitalize() for k, w in enumerate(words))
+
+
 EARTH_RADIUS_KM = 6371.0
 
 

@@ -1,0 +1,7 @@
+carbon price (R$ per tonne),centers,net saving (R$),CO2 (tonnes),CO2 vs shipping direct (%),items through a center (%),sites
+0,9,208701.47235649545,23.698342573638687,-36.79306448356962,80.21485276197012,"Brasilia, Curitiba, Porto Alegre, Salvador, Osasco (L), Recife, Nova Iguacu, Contagem, Teresina"
+500,9,208329.18847808335,23.61833586140246,-37.00645405229086,79.75935544171409,"Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Sao Caetano Do Sul (L), Teresina"
+2500,10,207839.43563722307,23.080851779255376,-38.44000247939346,81.78129029968174,"Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Vila Velha, Sao Caetano Do Sul (L), Teresina"
+10000,10,206646.3198804441,22.852650062886845,-39.04864973505806,83.03065437809826,"Sao Paulo (L), Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Vila Velha, Teresina"
+25000,15,171390.94247111958,20.661679749665776,-44.892287064371686,97.97214959241863,"Sao Paulo (L), Rio De Janeiro, Brasilia, Curitiba, Campinas, Porto Alegre, Salvador, Recife, Contagem, Belem, Vitoria, Sao Jose Do Rio Preto, Londrina, Teresina, Cuiaba"
+50000,18,147259.4147730996,20.006843941208775,-46.63882965866401,99.42737479739243,"Sao Paulo (L), Rio De Janeiro, Belo Horizonte, Brasilia, Curitiba, Campinas, Porto Alegre, Salvador, Fortaleza, Recife, Florianopolis, Ribeirao Preto, Belem, Vitoria, Sao Jose Do Rio Preto, Londrina, Teresina, Cuiaba"

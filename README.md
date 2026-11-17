@@ -1,91 +1,73 @@
 # Supply Chain Network Optimizer
 
-**Where should an online marketplace put its fulfillment centers, and how much stock should each one hold?**
+**Where should an online marketplace build its warehouses, how big, and what happens when demand grows, trucks run late and Black Friday hits?**
 
-This project answers that question for Olist, a Brazilian e-commerce marketplace, using about 100,000 real orders. It combines SQL analysis, a freight cost model, a mixed-integer optimization model, an inventory policy tested by simulation, and robustness checks on the result.
+This project answers that for Olist, a Brazilian e-commerce marketplace, using 84,523 real shipments. It goes from SQL analysis to a freight cost model, facility location optimization, an inventory policy, a two-stage stochastic program, a discrete-event simulation and a cost-versus-carbon analysis. It ends in a decision tool that solves the optimization live in the browser.
 
-**[Try the interactive version](https://varunnadgir.github.io/supply-chain-optimizer/)**: pick the number of centers and the handling cost, and see the optimized network, its savings and delivery times.
+**[Open the live Network Design Studio](https://varunnadgir.github.io/supply-chain-optimizer/)** · **[Read the two-page memo](https://varunnadgir.github.io/supply-chain-optimizer/memo.html)**
 
-**Tools:** Python (pandas, NumPy, PuLP, SciPy, matplotlib, pytest), SQL (SQLite), Jupyter, JavaScript (interactive page).
+[![The Network Design Studio](figures/studio.png)](https://varunnadgir.github.io/supply-chain-optimizer/)
+
+**Tools:** Python (pandas, NumPy, SciPy, PuLP, HiGHS, SimPy, matplotlib, pytest), SQL (SQLite), Jupyter, JavaScript and WebAssembly.
 
 ## The result in one paragraph
 
-Today every Olist order ships as a single parcel straight from the seller. 72% of items ship out of São Paulo state, but only 43% are delivered there, so most parcels travel far. The optimization model recommends **six regional fulfillment centers**, which in the base case **cut yearly freight by about 12% and typical transit time by 41%, from 7.3 days to 4.3**. Holding the stock those centers need costs roughly a quarter of the freight saving. The model also shows that one in four items should keep shipping direct, because an extra handling step costs more than it saves for customers who are already close to the sellers. The site choice holds up under resampled demand and when the model is designed on one half-year and used on the next.
+Today every Olist order ships as a single parcel straight from the seller. 72% of items ship out of São Paulo state, but only 43% are delivered there, so most parcels travel far. Planning for the growth the business is likely to see, the model recommends **nine or ten regional fulfillment centers, with one large building in the São Paulo metro area**. That network saves about **R\$220,000 a year after building costs**, triples the share of items delivered within two days (**19% to 61%**) and cuts transport **CO2 by about 37%**. A day-by-day simulation on the real order stream shows customers would get their orders in **9.4 days instead of 12.7**, and it caught a mismatch between the network model and the inventory plan that the yearly numbers hid.
 
-![Map of the six-center network](figures/02_network_map.png)
+## What the project found
 
-## The problem
+1. **A few regional centers pay off.** With last year's demand, six centers cut freight by 11.8% and typical transit time by 41% (notebook 2). One item in four should keep shipping direct, because a stop at a center costs more than it saves for customers already near their sellers.
+2. **Plan for growth, not for last year.** A network designed for last year's demand leaves about R\$19,000 a year (8%) on the table once demand grows, because the São Paulo and Rio de Janeiro buildings end up too small (notebook 5).
+3. **The sophisticated model did not beat the simple one, and the reason is understood.** A two-stage stochastic program over 50 possible futures gave the same value as planning for the single average future. Shipping overflow direct makes a wrong guess cheap to fix. Perfect foresight would add only about 3%.
+4. **Risk is a choice.** Giving up under 1% of the average saving buys about 7% more saving in the worst 10% of futures (nine centers instead of ten).
+5. **Speed is nearly free up to a point.** The cost-optimal network already delivers 61% of items in two days. Promising 70% needs 18 centers and costs about a quarter of the saving.
+6. **The simulation found what the averages hid.** The network model assumed every product would be stocked at the centers; the inventory plan stocked the top ten categories. Run together, only 44% of items go through a center instead of 74%, and the freight saving is 7% instead of 11.8%. Stocking every category closes the gap; the extra inventory roughly pays for itself, and half of all orders then arrive within five days (notebook 6).
+7. **Cost and carbon point the same way.** The cheapest network also cuts transport CO2 by about a third. A carbon price would need to be about fifty times the EU's before it changed the design (notebook 7).
+8. **The core sites are robust.** Salvador, Porto Alegre, the Rio de Janeiro metro and the Belo Horizonte metro are chosen under every cost, growth and resampling test.
 
-| What the data shows (Sep 2017 to Aug 2018) | |
-|---|---|
-| Orders analyzed | 73,841 orders, 84,523 items, R\$1.70 million in freight |
-| Supply vs demand | 72% of items ship from São Paulo state, 43% are delivered there |
-| Cost of distance | R\$24 average freight across state lines vs R\$13 within a state |
-| Time cost of distance | 12 days in transit across state lines vs under 5 within a state |
-| Why speed matters | Late orders average 2.6 stars, fast on-time orders 4.4 |
+## How it is built
 
-![Supply vs demand by state](figures/01_supply_vs_demand.png)
+Seven notebooks, meant to be read in order. Each one starts with its question and ends with what it found.
 
-## The approach
+| Notebook | Question | Methods |
+|---|---|---|
+| [1. SQL exploration](notebooks/01_sql_exploration.ipynb) | Where are customers and sellers, and what does distance cost? | SQL: joins across six tables, CTEs, window functions, date arithmetic |
+| [2. Network design](notebooks/02_network_design.ipynb) | Where should centers go to minimize freight? | Least-squares freight rate card, p-median MILP with a ship-direct option, brute-force verification, sensitivity analysis |
+| [3. Inventory policy](notebooks/03_inventory_policy.ipynb) | How much stock should each center hold? | Exponential smoothing forecasts, order-up-to policy, replay test on unseen weeks, risk pooling |
+| [4. Trade-offs and robustness](notebooks/04_tradeoffs_and_robustness.ipynb) | Does the answer survive inventory costs and different data? | Bootstrap resampling, out-of-sample regret, cost versus speed |
+| [5. Designing for an uncertain future](notebooks/05_designing_for_an_uncertain_future.ipynb) | Which network should be built once, for years of uncertain growth? | Two-stage stochastic MILP with capacity, fixed costs and building sizes, value of the stochastic solution, value of perfect information, CVaR risk frontier, service-level constraints |
+| [6. Simulating the network](notebooks/06_simulating_the_network.ipynb) | Does the plan hold when it runs one order at a time? | Discrete-event simulation in SimPy: real order stream, random transit and lead times, picking capacity, Black Friday |
+| [7. Cost versus carbon](notebooks/07_cost_vs_carbon.ipynb) | What does the network do to emissions? | Emission factors per tonne-km, carbon pricing in the objective, factor sensitivity |
 
-The project is four notebooks, meant to be read in order.
+The **[Network Design Studio](https://varunnadgir.github.io/supply-chain-optimizer/)** puts the notebook 5 model in the browser. Visitors change demand growth, building costs, capacity limits, handling cost, a two-day delivery promise and a carbon price, or rule sites out on the map, and the HiGHS solver (compiled to WebAssembly) re-solves the mixed-integer program in well under a second for most settings. A [simpler precomputed version](https://varunnadgir.github.io/supply-chain-optimizer/explorer.html) shows the notebook 2 results.
 
-### 1. [SQL exploration](notebooks/01_sql_exploration.ipynb)
+![Planning for growth versus planning for last year](figures/05_plans_compared.png)
 
-Eight business questions answered with SQL on a SQLite database built from nine raw CSV files. The queries live in [`sql/queries.sql`](sql/queries.sql) and use joins across six tables, CTEs, window functions (`RANK`, running shares, moving averages), `CASE` logic and date arithmetic.
-
-### 2. [Network design](notebooks/02_network_design.ipynb)
-
-- **Freight rate card.** A least-squares model of parcel cost by distance zone and weight, fitted to 84,523 real shipments (R² = 0.57, and it reproduces total freight exactly).
-- **Optimization model.** A mixed-integer linear program (a p-median model with a "ship direct" option) written in PuLP. It chooses which of 60 candidate cities get a fulfillment center and how each of 3,811 customer cities is served, to minimize total freight.
-- **Verification.** The solver's answer is checked against brute-force enumeration for the 1-site and 2-site cases.
-- **Sensitivity analysis.** The model is re-solved across a range of handling costs and linehaul rates.
-
-![Savings and transit time by number of fulfillment centers](figures/02_savings_by_network_size.png)
-
-The six sites the model picks are Osasco (São Paulo metro), Nova Iguaçu (Rio de Janeiro metro), Salvador, Contagem (Belo Horizonte metro), Brasília and Porto Alegre. The model was given only order volumes and distances, and it landed on Brazil's main population centers.
-
-### 3. [Inventory policy](notebooks/03_inventory_policy.ipynb)
-
-- **Forecasting.** Naive, moving average and exponential smoothing forecasts compared on held-out weeks for 60 demand series (6 centers x 10 product categories).
-- **Safety stock.** A weekly order-up-to policy sized for a 95% service level from the forecast error of each series.
-- **Simulation test.** The policy is replayed week by week over 16 weeks of real demand it had never seen. It delivered 92.5% of weeks without a stockout against the 95% target, and reaching a true 95% took the 99% setting.
-- **Risk pooling.** Six centers need 1.8 times the safety stock of one pooled location.
-- **Cost of inventory.** Holding the stock costs about R\$51,000 a year, roughly 26% of the freight saving.
-
-![Safety stock: six centers vs one pooled location](figures/03_risk_pooling.png)
-
-### 4. [Trade-offs and robustness](notebooks/04_tradeoffs_and_robustness.ipynb)
-
-- **Freight and inventory together.** Net of holding costs, the first two centers each add over R\$40,000 a year. Centers 3 to 7 add about R\$13,000 to R\$18,000 each, which is the most each could cost to run and still pay off.
-- **Bootstrap test.** Across 40 resampled years, five of the six sites were chosen every time, and the sixth was always in the same metro area.
-- **Out-of-sample test.** A network designed on Sep 2017 to Feb 2018 was exactly the best network for Mar to Aug 2018 (zero regret for 2, 4 and 6 centers).
-- **Cost versus speed.** Putting a R\$ value on transit days barely changes the sites. The cheapest and the fastest networks are nearly the same.
-
-![Freight saved vs inventory holding cost](figures/04_freight_vs_inventory.png)
+![Delivery times: today versus the simulated network](figures/06_delivery_days.png)
 
 ## Key numbers
 
-| | Today | Six-center network |
+| | Today | Recommended network |
 |---|---|---|
-| Yearly freight | R\$1,703,757 | R\$1,503,533 (11.8% lower) |
-| Typical days in transit | 7.3 | 4.3 (41% faster) |
-| Items through a fulfillment center | 0% | 74% |
-| Yearly cost of holding stock | none | about R\$51,000 |
-| Net yearly saving | | about R\$149,000 |
+| Freight, study year | R\$1.70 million | 11.8% lower with six centers (notebook 2) |
+| Net saving after building costs, demand 1.5x | | about R\$220,000 a year (notebook 5) |
+| Items delivered within two days | 19% | 61% |
+| Days from purchase to the customer's door (simulated) | 12.7 | 9.4 with the top ten categories stocked, 7.5 with everything stocked |
+| Transport CO2 | | about 37% lower |
 
 The R\$ figures describe this dataset, which is a sample of Olist's orders. The percentages are the transferable result.
 
 ## Assumptions and limits
 
-The result depends on assumptions that the data cannot settle, and the notebooks test each one.
+Each assumption below is tested in the notebook that uses it.
 
-- **Handling cost at a fulfillment center is assumed at R\$2.00 per item.** This is the most sensitive input. Between R\$1 and R\$3 the freight saving ranges from about 16% down to about 9%.
-- **Bulk inbound freight is priced at the distance rate observed in parcel prices**, which is likely higher than real truck rates. That keeps the saving conservative.
-- **Fixed costs of running a fulfillment center are not included.** The notebook reports the saving each additional center adds, which is the most it could cost per year and still pay for itself.
-- **Distances are straight-line**, and centers have no capacity limits.
-- **Inventory is planned by category, not by product**, with an assumed one-week lead time and a 25% yearly holding rate.
-- **The rate card explains 57% of the variation in parcel prices.** It is reasonable for network totals and weak for pricing a single parcel.
+- **Handling cost at a center is R\$2.00 per item.** The most sensitive input in notebook 2: between R\$1 and R\$3 the freight saving ranges from about 16% to 9%.
+- **Building costs and sizes** (notebook 5) are R\$15,000 a year for a small building holding 20,000 items and R\$25,000 for a large one holding 50,000. The number of centers depends on these; the four core sites do not.
+- **Future demand** grows by a median of 1.5 times with uneven regional growth, calibrated on the 2017 to 2018 growth in the data. Sellers are assumed to stay where they are.
+- **Bulk freight** to a center is priced at the distance rate observed in parcel prices, which likely overstates real truck rates and keeps the savings conservative.
+- **Distances are straight-line.** The freight rate card explains 57% of the variation in parcel prices: reasonable for network totals, weak for pricing a single parcel.
+- **Inventory** is planned by category with a one-week lead time and a 25% yearly holding rate. The simulation shows the policy depends heavily on the lead time.
+- **Emission factors** are 0.25 kg CO2 per tonne-km for parcels and 0.10 for full trucks. The size of the CO2 cut depends on them; the direction holds across the plausible range.
 
 ## Run it yourself
 
@@ -101,25 +83,25 @@ Download the data (see [`data/README.md`](data/README.md)), then:
 
 ```bash
 python src/build_database.py      # builds data/olist.db, about 30 seconds
-jupyter notebook                  # open the notebooks in order: 01 to 04
-pytest -q                         # 8 automated checks, about a minute
+jupyter notebook                  # open the notebooks in order: 01 to 07
+pytest -q                         # 13 automated checks, a few minutes
 ```
 
-Notebooks 2 and 4 take about three minutes each because they solve the optimization model many times.
+Notebooks 2 and 4 take about three minutes each and notebook 5 about twenty, because they solve optimization models many times. The others run in a minute or two.
 
-To rebuild the interactive page's data after changing the model: `python src/build_scenarios.py` (56 solves, a few minutes). Preview the page with `python -m http.server` inside `docs/`.
+To rebuild the data behind the web pages: `python src/build_live_data.py` for the studio and `python src/build_scenarios.py` for the precomputed explorer. Preview them with `python -m http.server` inside `docs/`.
 
 ## Repository layout
 
 ```
 data/           raw CSVs and the SQLite database (not committed), plus data notes
 sql/            every SQL query used in the project, by name
-src/            database build, the network and inventory models, scenario builder
-notebooks/      the four notebooks, with outputs
-docs/           the interactive page (GitHub Pages) and its precomputed data
-tests/          automated checks that the models reproduce the notebooks
+src/            database build, network, inventory and stochastic models, simulation, page data builders
+notebooks/      the seven notebooks, with outputs
+docs/           the Network Design Studio, the precomputed explorer and the memo (GitHub Pages)
+tests/          automated checks that the models reproduce the notebooks and behave sensibly
 figures/        charts saved by the notebooks
-results/        tables saved by the notebooks (rate card, site choices, inventory policy)
+results/        tables saved by the notebooks
 ```
 
 ## Data source

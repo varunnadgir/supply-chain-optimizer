@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fulfillment Network Explorer</title>
+<meta name="description" content="Interactive results of a fulfillment center location model built on 84,523 real Olist e-commerce shipments.">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f5f2;
+    --surface: #fcfcfb;
+    --border: #e6e5e0;
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --muted: #8a8984;
+    --blue: #2a78d6;
+    --blue-soft: rgba(42, 120, 214, 0.18);
+    --orange: #eb6834;
+    --gray-dot: #b9b8b2;
+    --state-fill: #efeee9;
+    --state-line: #dad9d3;
+    --accent-bg: #eaf2fc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #121211;
+      --surface: #1a1a19;
+      --border: #2e2e2c;
+      --text: #f0efec;
+      --text-2: #c3c2b7;
+      --muted: #8f8e88;
+      --blue: #3987e5;
+      --blue-soft: rgba(57, 135, 229, 0.22);
+      --orange: #d95926;
+      --gray-dot: #5d5c58;
+      --state-fill: #222220;
+      --state-line: #34332f;
+      --accent-bg: #18263a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --border: #2e2e2c;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #8f8e88;
+    --blue: #3987e5;
+    --blue-soft: rgba(57, 135, 229, 0.22);
+    --orange: #d95926;
+    --gray-dot: #5d5c58;
+    --state-fill: #222220;
+    --state-line: #34332f;
+    --accent-bg: #18263a;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 16px 56px; }
+  header h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--text-2); max-width: 760px; }
+  header .links { margin-top: 12px; font-size: 14px; }
+  a { color: var(--blue); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .controls {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .control label { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; }
+  .control label output { font-variant-numeric: tabular-nums; color: var(--blue); }
+  .control .hint { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  input[type="range"] { width: 100%; margin: 10px 0 0; accent-color: var(--blue); height: 28px; }
+  .ticks { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); padding: 0 6px; }
+
+  .kpis { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi .label { font-size: 12.5px; color: var(--text-2); }
+  .kpi .value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .kpi .sub { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .main { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 4px; }
+  .card .caption { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+
+  #map { width: 100%; height: auto; display: block; }
+  #map .state { fill: var(--state-fill); stroke: var(--state-line); stroke-width: 1; }
+  #map .link { stroke: var(--blue); stroke-opacity: 0.16; stroke-width: 0.6; }
+  #map .city-direct { fill: var(--gray-dot); }
+  #map .city-fc { fill: var(--blue); fill-opacity: 0.85; }
+  #map .fc-star { fill: var(--orange); stroke: var(--surface); stroke-width: 1.5; }
+  #map .fc-label { font-size: 19px; font-weight: 700; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-2); margin-top: 8px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+  .legend .star::before { border-radius: 0; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 12px; height: 12px; }
+
+  .side { display: grid; gap: 16px; align-content: start; }
+  #curve { width: 100%; height: auto; display: block; }
+  #curve .bar { fill: var(--blue); opacity: 0.35; }
+  #curve .bar.active { opacity: 1; }
+  #curve .hit { fill: transparent; cursor: pointer; }
+  #curve text { font-size: 11px; fill: var(--text-2); }
+  #curve .val { font-size: 10.5px; fill: var(--text-2); font-variant-numeric: tabular-nums; }
+  #curve .axis { stroke: var(--border); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; color: var(--text-2); font-size: 12.5px; }
+  tr.direct td { color: var(--muted); }
+  .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--blue); }
+  tr.direct .swatch { background: var(--gray-dot); }
+
+  .notes { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .notes ul { margin: 6px 0 0; padding-left: 18px; color: var(--text-2); font-size: 14px; }
+  .notes li { margin: 4px 0; }
+  footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); }
+
+  #tip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); max-width: 240px;
+  }
+  #tip b { display: block; font-size: 13px; }
+  #tip .row { color: var(--text-2); }
+
+  .theme-toggle {
+    position: absolute; top: 16px; right: 16px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-2); border-radius: 8px; padding: 4px 10px; font-size: 12.5px; cursor: pointer;
+  }
+  .loading { padding: 40px; text-align: center; color: var(--muted); }
+
+  @media (max-width: 860px) {
+    .main, .notes { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) {
+    .controls { grid-template-columns: 1fr; gap: 16px; }
+    header h1 { font-size: 23px; }
+    .kpi .value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+<div class="wrap">
+  <header>
+    <h1>Where should an online marketplace put its warehouses?</h1>
+    <p>Olist, a Brazilian marketplace, ships every order straight from the seller, and 72% of items leave from São Paulo state. This page shows what an optimization model recommends instead: a few regional fulfillment centers that hold stock close to customers. Every scenario below was solved in advance from 84,523 real shipments (Sep 2017 to Aug 2018).</p>
+    <div class="links"><a href="https://github.com/varunnadgir/supply-chain-optimizer">Code, data and notebooks on GitHub</a></div>
+  </header>
+
+  <section class="card controls" aria-label="Scenario controls">
+    <div class="control">
+      <label for="centers">Number of fulfillment centers <output id="centersOut">6</output></label>
+      <input type="range" id="centers" min="1" max="8" step="1" value="6">
+      <div class="ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+      <div class="hint">The model picks the best sites out of 60 candidate cities.</div>
+    </div>
+    <div class="control">
+      <label for="fee">Handling cost per item at a center <output id="feeOut">R$2</output></label>
+      <input type="range" id="fee" min="0" max="6" step="1" value="2">
+      <div class="ticks"><span>R$0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+      <div class="hint">The one input the data cannot tell us. R$2 is the base case.</div>
+    </div>
+  </section>
+
+  <section class="kpis" aria-live="polite">
+    <div class="card kpi"><div class="label">Freight saved per year</div><div class="value" id="kSaving">–</div><div class="sub" id="kSavingSub">–</div></div>
+    <div class="card kpi"><div class="label">Typical days in transit</div><div class="value" id="kTransit">–</div><div class="sub" id="kTransitSub">–</div></div>
+    <div class="card kpi"><div class="label">Items shipped from a center</div><div class="value" id="kVia">–</div><div class="sub">the rest still ship direct</div></div>
+    <div class="card kpi"><div class="label">Freight today</div><div class="value" id="kBase">–</div><div class="sub">every item direct from its seller</div></div>
+  </section>
+
+  <section class="main">
+    <div class="card">
+      <h2 id="mapTitle">The network</h2>
+      <p class="caption">Each dot is a customer city, sized by items ordered. Hover a dot for details.</p>
+      <div id="mapWrap"><div class="loading">Loading…</div></div>
+      <div class="legend">
+        <span style="--c: var(--blue)">served by a fulfillment center</span>
+        <span style="--c: var(--gray-dot)">keeps shipping direct from sellers</span>
+        <span class="star" style="--c: var(--orange)">fulfillment center</span>
+      </div>
+    </div>
+    <div class="side">
+      <div class="card">
+        <h2>Freight saved by number of centers</h2>
+        <p class="caption" id="curveCaption">At the selected handling cost. Click a bar to pick it.</p>
+        <svg id="curve" viewBox="0 0 360 160" role="img" aria-label="Bar chart of freight saved for 1 to 8 fulfillment centers"></svg>
+      </div>
+      <div class="card">
+        <h2>What each center handles</h2>
+        <table>
+          <thead><tr><th>Center</th><th>Cities</th><th>Items/yr</th><th>Share</th></tr></thead>
+          <tbody id="fcTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div class="card">
+      <h2>How the model works</h2>
+      <ul>
+        <li><b>Freight rate card.</b> Parcel cost by distance zone and weight, fitted by least squares to the real shipments.</li>
+        <li><b>Two trips through a center.</b> Seller to center in bulk by truck (cheap per item), then a short parcel trip to the customer, plus a handling cost.</li>
+        <li><b>Optimization.</b> A mixed-integer program (the p-median problem with a "ship direct" option) chooses which sites to open and how to serve each of 3,811 cities. Solved with PuLP and CBC, and checked against brute force for small cases.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>What to keep in mind</h2>
+      <ul>
+        <li>The handling cost is assumed, and it moves the answer the most. That is why it is a slider.</li>
+        <li>Rent and staffing for each center are not included. The saving each extra center adds is the most it could cost per year and still pay off.</li>
+        <li>Distances are straight-line, and centers have no capacity limit.</li>
+        <li>Holding stock in the centers costs roughly a quarter of the base case saving (notebook 3).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Data: <a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce">Brazilian E-Commerce Public Dataset by Olist</a> (CC BY-NC-SA 4.0). Amounts in Brazilian reais (R$). The dataset is a sample of Olist's orders, so the percentages matter more than the totals.
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+(() => {
+  // ------------------------------------------------------------ theme toggle
+  const root = document.documentElement;
+  const toggle = document.getElementById("themeToggle");
+  try { const saved = localStorage.getItem("theme"); if (saved) root.dataset.theme = saved; } catch (e) {}
+  toggle.addEventListener("click", () => {
+    const dark = root.dataset.theme
+      ? root.dataset.theme === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+  });
+
+  // ------------------------------------------------------------ helpers
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, parent) => {
+    const node = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    if (parent) parent.appendChild(node);
+    return node;
+  };
+  const fmtR = (v) => "R$" + Math.round(v).toLocaleString("en-US");
+  const fmtK = (v) => v >= 1e6 ? "R$" + (v / 1e6).toFixed(2) + "M" : "R$" + Math.round(v / 1000) + "k";
+  const starPath = (cx, cy, r) => {
+    let d = "";
+    for (let i = 0; i < 10; i++) {
+      const rad = i % 2 ? r * 0.45 : r;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      d += (i ? "L" : "M") + (cx + rad * Math.cos(a)).toFixed(1) + "," + (cy + rad * Math.sin(a)).toFixed(1);
+    }
+    return d + "Z";
+  };
+
+  Promise.all([
+    fetch("scenarios.json").then((r) => r.json()),
+    fetch("brazil_states.json").then((r) => r.json()),
+  ]).then(([data, outline]) => start(data, outline)).catch((err) => {
+    $("mapWrap").innerHTML = '<div class="loading">Could not load the scenario data. If you opened this file directly, serve the folder instead (for example <code>python -m http.server</code> inside <code>docs/</code>).</div>';
+    console.error(err);
+  });
+
+  function start(data, outline) {
+    const P = outline.projection;
+    const proj = (lng, lat) => [(lng - P.lng0) * P.kx * P.scale, (P.lat0 - lat) * P.scale];
+    const scenarios = new Map(data.scenarios.map((s) => [s.centers + "|" + s.handling_fee, s]));
+    const C = data.cities, S = data.sites;
+    const nCities = C.lat.length;
+    const cityXY = C.lat.map((lat, i) => proj(C.lng[i], lat));
+    const siteXY = S.lat.map((lat, j) => proj(S.lng[j], lat));
+    const radius = C.items.map((n) => Math.max(1.2, Math.sqrt(n) * 0.42));
+
+    $("kBase").textContent = fmtK(data.baseline.freight);
+
+    // ---------------- map (built once, recolored per scenario)
+    const W = 800, H = 800;
+    const svg = el("svg", { id: "map", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Map of Brazil showing customer cities and fulfillment centers" });
+    const gStates = el("g", {}, svg);
+    for (const d of Object.values(outline.states)) el("path", { d, class: "state" }, gStates);
+    const gLinks = el("g", {}, svg);
+    const gCities = el("g", {}, svg);
+    const gFC = el("g", {}, svg);
+    // draw small cities on top of big ones so they stay hoverable
+    const order = [...Array(nCities).keys()].sort((a, b) => C.items[b] - C.items[a]);
+    const dots = new Array(nCities);
+    for (const i of order) {
+      dots[i] = el("circle", { cx: cityXY[i][0].toFixed(1), cy: cityXY[i][1].toFixed(1), r: radius[i].toFixed(2), "data-i": i }, gCities);
+    }
+    $("mapWrap").replaceChildren(svg);
+
+    // ---------------- tooltip
+    const tip = $("tip");
+    let current = null;
+    const showTip = (evt, html) => {
+      tip.innerHTML = html;
+      tip.style.display = "block";
+      const pad = 14, rect = tip.getBoundingClientRect();
+      let x = evt.clientX + pad, y = evt.clientY + pad;
+      if (x + rect.width > window.innerWidth - 8) x = evt.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = evt.clientY - rect.height - pad;
+      tip.style.left = x + "px"; tip.style.top = y + "px";
+    };
+    const hideTip = () => { tip.style.display = "none"; };
+    gCities.addEventListener("pointermove", (evt) => {
+      const i = evt.target.getAttribute && evt.target.getAttribute("data-i");
+      if (i === null || !current) return hideTip();
+      const site = current.assigned[i];
+      const served = site >= 0 ? `${S.name[site]} center` : "direct from sellers";
+      showTip(evt, `<b>${C.name[i]}, ${C.state[i]}</b><div class="row">${C.items[i].toLocaleString("en-US")} items a year</div><div class="row">Served: ${served}</div>`);
+    });
+    gCities.addEventListener("pointerleave", hideTip);
+    gFC.addEventListener("pointermove", (evt) => {
+      const j = evt.target.getAttribute && evt.target.getAttribute("data-j");
+      if (j === null || !current) return hideTip();
+      const stats = current._stats.get(Number(j));
+      showTip(evt, `<b>${S.name[j]}, ${S.state[j]} center</b><div class="row">${stats.cities.toLocaleString("en-US")} cities, ${stats.items.toLocaleString("en-US")} items a year</div>`);
+    });
+    gFC.addEventListener("pointerleave", hideTip);
+
+    // ---------------- controls
+    const centers = $("centers"), fee = $("fee");
+    const update = () => render(scenarios.get(centers.value + "|" + fee.value));
+    centers.addEventListener("input", update);
+    fee.addEventListener("input", update);
+
+    function render(s) {
+      current = s;
+      $("centersOut").textContent = s.centers;
+      $("feeOut").textContent = "R$" + s.handling_fee;
+
+      // KPIs
+      $("kSaving").textContent = fmtK(s.saving);
+      $("kSavingSub").textContent = `${s.saving_pct.toFixed(1)}% less than today`;
+      $("kTransit").textContent = s.transit_days.toFixed(1) + " days";
+      const faster = 100 * (1 - s.transit_days / data.baseline.transit_days);
+      $("kTransitSub").textContent = `vs ${data.baseline.transit_days.toFixed(1)} today, ${faster.toFixed(0)}% faster`;
+      $("kVia").textContent = s.pct_items_via_fc.toFixed(0) + "%";
+      $("mapTitle").textContent = `The ${s.centers}-center network at R$${s.handling_fee} handling per item`;
+
+      // per-center stats
+      const stats = new Map(s.sites.map((j) => [j, { cities: 0, items: 0 }]));
+      const direct = { cities: 0, items: 0 };
+      for (let i = 0; i < nCities; i++) {
+        const site = s.assigned[i];
+        const bucket = site >= 0 ? stats.get(site) : direct;
+        bucket.cities += 1; bucket.items += C.items[i];
+        dots[i].setAttribute("class", site >= 0 ? "city-fc" : "city-direct");
+      }
+      s._stats = stats;
+
+      // links from each served city to its center
+      let d = "";
+      for (let i = 0; i < nCities; i++) {
+        const site = s.assigned[i];
+        if (site < 0) continue;
+        const [x1, y1] = siteXY[site], [x2, y2] = cityXY[i];
+        d += `M${x1.toFixed(1)},${y1.toFixed(1)}L${x2.toFixed(1)},${y2.toFixed(1)}`;
+      }
+      gLinks.replaceChildren();
+      if (d) el("path", { d, class: "link", fill: "none" }, gLinks);
+
+      // stars and labels
+      gFC.replaceChildren();
+      for (const j of s.sites) {
+        const [x, y] = siteXY[j];
+        el("path", { d: starPath(x, y, 16), class: "fc-star", "data-j": j }, gFC);
+      }
+      for (const j of s.sites) {
+        const [x, y] = siteXY[j];
+        // labels go right of the star, or left of it near the right edge of the map
+        const flip = x > W - 140;
+        const label = el("text", { x: (flip ? x - 18 : x + 18).toFixed(1), y: (y - 8).toFixed(1), class: "fc-label",
+                                   "text-anchor": flip ? "end" : "start" }, gFC);
+        label.textContent = S.name[j];
+      }
+
+      // table
+      const total = data.baseline.items;
+      const rows = [...stats.entries()].sort((a, b) => b[1].items - a[1].items).map(([j, v]) =>
+        `<tr><td><span class="swatch"></span>${S.name[j]}, ${S.state[j]}</td><td>${v.cities.toLocaleString("en-US")}</td><td>${v.items.toLocaleString("en-US")}</td><td>${(100 * v.items / total).toFixed(0)}%</td></tr>`);
+      rows.push(`<tr class="direct"><td><span class="swatch"></span>Direct from sellers</td><td>${direct.cities.toLocaleString("en-US")}</td><td>${direct.items.toLocaleString("en-US")}</td><td>${(100 * direct.items / total).toFixed(0)}%</td></tr>`);
+      $("fcTable").innerHTML = rows.join("");
+
+      drawCurve(Number(s.handling_fee), s.centers);
+    }
+
+    // ---------------- savings-by-centers bar chart
+    function drawCurve(feeValue, active) {
+      const svgC = $("curve");
+      svgC.replaceChildren();
+      const vals = [];
+      for (let n = 1; n <= 8; n++) vals.push(scenarios.get(n + "|" + feeValue).saving_pct);
+      const max = 23;
+      const left = 8, right = 352, top = 16, bottom = 132, bw = (right - left) / 8;
+      el("line", { x1: left, x2: right, y1: bottom, y2: bottom, class: "axis" }, svgC);
+      vals.forEach((v, k) => {
+        const n = k + 1;
+        const h = Math.max(0, (v / max) * (bottom - top));
+        const x = left + k * bw + bw * 0.18, w = bw * 0.64;
+        const r = Math.min(4, w / 2, h);
+        // bar with rounded top corners, anchored to the baseline
+        const y = bottom - h;
+        el("path", {
+          d: `M${x},${bottom}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${bottom}Z`,
+          class: "bar" + (n === active ? " active" : ""),
+        }, svgC);
+        const t = el("text", { x: x + w / 2, y: y - 4, "text-anchor": "middle", class: "val" }, svgC);
+        t.textContent = v.toFixed(1) + "%";
+        const lab = el("text", { x: x + w / 2, y: bottom + 15, "text-anchor": "middle" }, svgC);
+        lab.textContent = n;
+        const hit = el("rect", { x: left + k * bw, y: top - 14, width: bw, height: bottom - top + 34, class: "hit" }, svgC);
+        hit.addEventListener("click", () => { centers.value = n; update(); });
+      });
+      const cap = el("text", { x: (left + right) / 2, y: 158, "text-anchor": "middle" }, svgC);
+      cap.textContent = "number of fulfillment centers";
+      $("curveCaption").textContent = `At R$${feeValue} handling per item. Each extra center adds less. Click a bar to pick it.`;
+    }
+
+    update();
+  }
+})();
+</script>
+</body>
+</html>

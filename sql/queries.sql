@@ -211,7 +211,7 @@ ORDER BY delivery_outcome;
 -- name: shipments
 -- The base table for the network model (notebook 2): one row per item sold in
 -- the study year, with where it shipped from, where it went, what it weighed
--- and what the freight cost. Six tables joined into one.
+-- and what the freight cost. Seven tables joined into one.
 SELECT
     oi.order_id,
     oi.seller_id,
@@ -227,7 +227,13 @@ SELECT
     sg.lng                                  AS seller_lng,
     julianday(o.order_delivered_customer_date)
       - julianday(o.order_delivered_carrier_date) AS transit_days,
-    o.order_purchase_timestamp              AS purchased_at
+    o.order_purchase_timestamp              AS purchased_at,
+    -- added for the simulation in notebook 6: what was bought, and how long
+    -- the whole trip took from purchase to the customer's door
+    COALESCE(t.product_category_name_english,
+             p.product_category_name, 'unknown') AS category,
+    julianday(o.order_delivered_customer_date)
+      - julianday(o.order_purchase_timestamp) AS door_days
 FROM order_items oi
 JOIN orders    o  ON o.order_id    = oi.order_id
 JOIN customers c  ON c.customer_id = o.customer_id
@@ -235,6 +241,7 @@ JOIN sellers   s  ON s.seller_id   = oi.seller_id
 JOIN products  p  ON p.product_id  = oi.product_id
 JOIN zip_geo   cg ON cg.zip_prefix = c.customer_zip_code_prefix
 JOIN zip_geo   sg ON sg.zip_prefix = s.seller_zip_code_prefix
+LEFT JOIN category_translation t ON t.product_category_name = p.product_category_name
 WHERE o.order_status = 'delivered'
   AND p.product_weight_g IS NOT NULL
   AND o.order_purchase_timestamp >= '2017-09-01'

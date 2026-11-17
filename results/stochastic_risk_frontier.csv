@@ -1,0 +1,5 @@
+risk weight,centers,average net saving (R$),worst 10% of futures (R$),sites
+0.0,10,223879.44286302282,76568.84769144158,"Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Vila Velha, Sao Caetano do Sul (L), Teresina"
+0.3,9,222539.96329322222,81934.31477754677,"Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Sao Caetano do Sul (L), Teresina"
+0.6,8,210012.9472566404,90141.0949988886,"Brasilia, Curitiba, Porto Alegre, Salvador, Nova Iguacu, Contagem, Sao Caetano do Sul, Teresina"
+0.9,7,204833.91895054706,92785.50889319128,"Brasilia, Porto Alegre, Salvador, Nova Iguacu, Contagem, Sao Caetano do Sul, Teresina"

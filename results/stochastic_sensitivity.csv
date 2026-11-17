@@ -1,0 +1,7 @@
+case,centers,large buildings,sites
+base case,10,1,"Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Vila Velha, Sao Caetano do Sul (L), Teresina"
+fixed costs halved,16,1,"Brasilia, Curitiba, Campinas, Porto Alegre, Salvador, Santo Andre (L), Fortaleza, Recife, Florianopolis, Ribeirao Preto, Nova Iguacu, Contagem, Belem, Vila Velha, Londrina, Cuiaba"
+fixed costs doubled,4,0,"Porto Alegre, Salvador, Nova Iguacu, Contagem"
+slow growth (median x1.2),8,1,"Brasilia, Curitiba, Porto Alegre, Salvador, Nova Iguacu, Contagem, Sao Caetano do Sul (L), Teresina"
+fast growth (median x2.0),12,1,"Brasilia, Curitiba, Porto Alegre, Salvador, Fortaleza, Recife, Nova Iguacu, Contagem, Belem, Vila Velha, Sao Jose do Rio Preto, Sao Caetano do Sul (L)"
+regions twice as uneven,10,1,"Brasilia, Curitiba, Porto Alegre, Salvador, Recife, Nova Iguacu, Contagem, Vila Velha, Sao Caetano do Sul (L), Teresina"

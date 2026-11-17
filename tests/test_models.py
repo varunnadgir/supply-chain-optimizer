@@ -88,3 +88,54 @@ def test_network_never_worse_than_today(data):
     for fee in (0, 6, 50):
         result = nm.best_network(data, 1, handling_fee=fee)
         assert result["saving"] >= -1e-6
+
+
+# ---------------------------------------------------------------- notebooks 5 to 7
+
+import simulation as sim  # noqa: E402
+import stochastic_model as sm  # noqa: E402
+
+
+@pytest.fixture(scope="module")
+def regions(data):
+    return sm.aggregate(data)[0]
+
+
+def test_regions_keep_every_item(data, regions):
+    assert regions.items.sum() == pytest.approx(data.items_per_city.sum())
+    assert regions.direct_cost.sum() == pytest.approx(data.baseline_cost)
+
+
+def test_grouping_barely_changes_cost(data, regions):
+    six = nm.best_network(data, 6)
+    grouped = np.minimum(regions.fc_cost()[:, six["sites"]].min(axis=1), regions.direct_cost).sum()
+    assert abs(grouped / six["cost"] - 1) < 0.01
+
+
+def test_stochastic_design_never_worse_than_direct(regions):
+    futures = sm.make_scenarios(sorted(set(regions.state)), 3, seed=0)
+    plan = sm.design(regions, futures)
+    assert plan["status"] == "Optimal"
+    for s in range(len(futures)):
+        result = sm.operate(regions, plan["sites"], futures.iloc[s])
+        assert result["cost"] <= result["baseline_cost"] + 1e-6
+
+
+def test_capacity_is_respected(regions):
+    future = pd.Series({s: 2.0 for s in set(regions.state)})
+    built = [(0, "small")]                       # one small building at the first candidate site
+    share = sm.route_shares(regions, built, future)
+    load = (np.array([future[s] for s in regions.state]) * regions.items * share[:, 0]).sum()
+    assert load <= sm.SIZES.at["small", "capacity"] + 1e-6
+
+
+def test_simulation_routes_every_item_and_replays_today(data):
+    items, daily = sim.run(data, sim.Settings())
+    assert items["route"].ne("").all()
+    direct = items["route"].str.startswith("direct")
+    # items that ship direct keep exactly their real purchase-to-door time
+    pd.testing.assert_series_equal(items.loc[direct, "sim_door_days"], items.loc[direct, "door_days"],
+                                   check_names=False)
+    summary = sim.summarize(items)
+    assert 85 < summary["fill_rate_pct"] < 99
+    assert (daily["backlog"] >= 0).all()
